@@ -33,14 +33,13 @@ test_set <- test_set[ ,-nearZeroVar(test_set)]
 # checking number of rows and columns after removing near zero columns
 dim(train_set)
 dim(test_set)
+
 # removing columns which have 95% NA values in training and test data sets
 train_set <- train_set[,!(colSums(is.na(train_set)) > nrow(train_set) * 0.95)]
 test_set <- test_set[,!(colSums(is.na(test_set)) > nrow(test_set) * 0.95)]
-
 dim(train_set)
 dim(test_set)
-colnames(train_set)
-colnames(test_set)
+
 # removing first 5 columns which have identification details
 train_set <- train_set[, -(1:5)]
 test_set <- test_set[, -(1:5)]
