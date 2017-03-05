@@ -1,0 +1,97 @@
+---
+title: "Practical Machine Learning_HTML"
+author: "Sheetal"
+date: "March 4, 2017"
+output: html_document
+--
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(rattle)
+library(randomForest)
+
+setwd("~/GitHub/datasciencecoursera")
+
+url_train <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+url_test <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+training <- read.csv(url(url_train))
+test <- read.csv(url(url_test))
+inTrain <- createDataPartition(training$class,p=0.7,list=FALSE)
+train_set <- training[inTrain, ]
+test_set <- training[-inTrain, ]
+dim(train_set)
+dim(test_set)
+
+
+train_set <- train_set[ ,-nearZeroVar(train_set)]
+test_set <- test_set[ ,-nearZeroVar(test_set)]
+
+dim(train_set)
+dim(test_set)
+
+train_set <- train_set[,!(colSums(is.na(train_set)) > nrow(train_set) * 0.95)]
+test_set <- test_set[,!(colSums(is.na(test_set)) > nrow(test_set) * 0.95)]
+
+dim(train_set)
+dim(test_set)
+
+train_set <- train_set[, -(1:5)]
+test_set <- test_set[, -(1:5)]
+dim(train_set)
+dim(test_set)
+
+set.seed(12345)
+control_rf <- trainControl(method="cv",number=3,verboseIter=FALSE)
+modfit_rf <- train(classe ~ .,data=train_set,method="rf",trControl=control_rf)
+modfit_rf$finalModel
+predictrf <- predict(modfit_rf, newdata=test_set)
+cm_rf <- confusionMatrix(predictrf,test_set$classe)
+cm_rf
+plot(cm_rf$table, col=cm_rf$byClass,
+main = paste("RF Accuracy =",cm_rf$overall['Accuracy']))
+
+modfit_dt <- rpart(classe ~ .,data=train_set,method="class")
+fancyRpartPlot(modfit_dt)
+predict_dt <- predict(modfit_dt,newdata=test_set,type="class")
+cm_dt <- confusionMatrix(predict_dt,test_set$classe)
+cm_dt
+plot_dt <- plot(cm_dt$table,col=cm_dt$byClass,
+main=paste("DT Accuracy=",cm_dt$overall['Accuracy']))
+
+control_gbm <- trainControl(method="repeatedcv",number=5,repeats=1)
+modfit_gbm <- train(classe ~ .,data=train_set,method="gbm",
+trControl = control_gbm, verbose=FALSE)
+modfit_gbm$finalModel
+predict_gbm <- predict(modfit_gbm, newdata=test_set)
+cm_gbm <- confusionMatrix(predict_gbm,test_set$classe)
+cm_gbm
+plot_gbm <- plot(cm_gbm$table,col=cm_gbm$byClass,
+main = paste("GBM Accuracy=",cm_gbm$overall['Accuracy']))
+
+predict_test <- predict(modfit_rf,newdata=test)
+predict_test
+
+```
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots You can also embed plots, for example:
+```{ r plot_dt, echo=TRUE}
+plot(plot_dt)
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
